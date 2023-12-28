@@ -1,3 +1,5 @@
+"use strict"
+;!globalThis?.module && (Object.assign(globalThis, { module: { exports: {} } }));
 "use strict";
 (() => {
   var __getOwnPropNames = Object.getOwnPropertyNames;

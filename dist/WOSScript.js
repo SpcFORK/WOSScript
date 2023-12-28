@@ -1,3 +1,5 @@
+"use strict"
+;!globalThis?.module && (Object.assign(globalThis, { module: { exports: {} } }));
 "use strict";
 var __create = Object.create;
 var __defProp = Object.defineProperty;
@@ -7,6 +9,10 @@ var __getProtoOf = Object.getPrototypeOf;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
 var __commonJS = (cb, mod) => function __require() {
   return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
+};
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
 };
 var __copyProps = (to, from, except, desc) => {
   if (from && typeof from === "object" || typeof from === "function") {
@@ -24,10 +30,11 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
   mod
 ));
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
 // src/Gradule-web.js
 var require_Gradule_web = __commonJS({
-  "src/Gradule-web.js"(exports2, module2) {
+  "src/Gradule-web.js"(exports, module2) {
     "use strict";
     var Preset = (() => {
       const presets = {
@@ -179,6 +186,11 @@ var require_Gradule_web = __commonJS({
 });
 
 // src/WOSScript.ts
+var WOSScript_exports = {};
+__export(WOSScript_exports, {
+  default: () => WOSScript_default
+});
+module.exports = __toCommonJS(WOSScript_exports);
 var Gd = __toESM(require_Gradule_web());
 var WOSScript = class {
   opts = {
@@ -201,15 +213,33 @@ var WOSScript = class {
     return groups;
   }
   abstract(filestr, type = "object") {
-    let RGheader = /^\/\*\s*@WOS\s*([^*]+)\s*\*\//gi.exec(filestr);
+    let RGheader = /^\/\*\s*@WOS[ \n]*([^*]+)[ \n]*\*\//gi.exec(filestr);
     let head = "";
     if (RGheader) {
       let headerText = RGheader[1];
       let header = headerText.split("\n");
       head = header.join("\n");
     }
-    let RGbody = filestr.replace((RGheader || [""])[0], "").trim();
+    let RGfooter = /\/\*\s*@WOS[ \n]*([^*]+)[ \n]*\*\/$/gi.exec(filestr);
+    let foot = "";
+    if (RGfooter) {
+      let footerText = RGfooter[1];
+      let footer = footerText.split("\n");
+      foot = footer.join("\n");
+    }
+    let RGbody = filestr.replace((RGheader || [""])[0], "").replace((RGfooter || [""])[0], "").trim();
+    let labelToKey = (string, name) => {
+      let res = string.replaceAll(`${name}:`, `${name}`);
+      let innerKey = (nname) => {
+        return labelToKey(res, nname);
+      };
+      res = Object.assign(res, {
+        labelToKey: innerKey
+      });
+      return res;
+    };
     let body = RGbody.replaceAll(";;", ",");
+    body = labelToKey(body, "static").labelToKey("public").labelToKey("private");
     let $th = this;
     function exporterSnip(doc) {
       if ($th.opts.platform) {
@@ -226,11 +256,11 @@ window.$wosglobe = $wosglobe;`;
             return doc + `
 ;(
   (
-    (globalThis?.window) && (window.$wosglobe = $wosglobe)
+    (globalThis?.window) && (Object.assign(window.$wosglobe || (window.$wosglobe = {}), $wosglobe))
   )
     ||
   (
-    (globalThis?.__dirname) && (globalThis.$wosglobe = $wosglobe)
+    (globalThis?.__dirname) && (Object.assign(globalThis.$wosglobe || (globalThis.$wosglobe = {}), $wosglobe))
   )
 );`;
             break;
@@ -247,11 +277,12 @@ window.$wosglobe = $wosglobe;`;
         "  PLEASE REFER TO DOCUMENTATION WHEN VIEWING COMPILED WOSSCRIPTS",
         `*/`,
         ``,
-        `const $wosglobe = {`,
+        `var $wosglobe = {`,
         body.split("\n").map((a) => "  " + a).join("\n"),
         `}`,
         ``
-      ].join("\n");
+      ].join("\n") + (foot ? `
+` : "") + foot;
       doc = exporterSnip(doc);
       return doc;
     }
@@ -266,11 +297,12 @@ window.$wosglobe = $wosglobe;`;
         "    - This document was built in Class Mode",
         `*/`,
         ``,
-        `const $wosglobe = class {`,
+        `var $wosglobe = class {`,
         body.split("\n").map((a) => "  " + a).join("\n"),
         `}`,
         ``
-      ].join("\n");
+      ].join("\n") + (foot ? `
+` : "") + foot;
       doc = exporterSnip(doc);
       return doc;
     }
@@ -285,11 +317,12 @@ window.$wosglobe = $wosglobe;`;
         "    - This document was built in Async Mode",
         `*/`,
         ``,
-        `const $wosglobe = async function() {`,
+        `var $wosglobe = async function() {`,
         body.split("\n").map((a) => "  " + a).join("\n"),
         `}`,
         ``
-      ].join("\n");
+      ].join("\n") + (foot ? `
+` : "") + foot;
       doc = exporterSnip(doc);
       return doc;
     }
@@ -304,11 +337,12 @@ window.$wosglobe = $wosglobe;`;
         "    - This document was built in Sync Mode",
         `*/`,
         ``,
-        `const $wosglobe = function() {`,
+        `var $wosglobe = function() {`,
         body.split("\n").map((a) => "  " + a).join("\n"),
         `}`,
         ``
-      ].join("\n");
+      ].join("\n") + (foot ? `
+` : "") + foot;
       doc = exporterSnip(doc);
       return doc;
     }
@@ -354,4 +388,5 @@ window.$wosglobe = $wosglobe;`;
     return evalResp;
   }
 };
-globalThis?.window && Object.assign(window, { WOSScript }) || globalThis?.module && (module.exports = { WOSScript });
+globalThis?.window && Object.assign(window, { WOSScript }) || module && (module.exports = { WOSScript });
+var WOSScript_default = WOSScript;

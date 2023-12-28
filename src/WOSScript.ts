@@ -7,7 +7,7 @@
 
 import Shout from '../shoutp';
 import * as Gd from './Gradule-web';
-import './types'
+import './types';
 
 /** WOSScript - A Module building language. */
 // © SpcFORK, SpectCOW 2023
@@ -70,7 +70,7 @@ class WOSScript {
     let mode = this.opts.type || 'object'
 
     if (mode === 'sync') mode = 'function'
-    
+
     let groups = this.abstract(filestr, mode)
 
     return groups;
@@ -80,7 +80,7 @@ class WOSScript {
   private abstract(filestr: string, type: typeof this.opts.type = 'object'): string {
     // The Header
     // ^/*@WOS <...> */
-    let RGheader = /^\/\*\s*@WOS\s*([^*]+)\s*\*\//gi.exec(filestr);
+    let RGheader = /^\/\*\s*@WOS[ \n]*([^*]+)[ \n]*\*\//gi.exec(filestr);
     let head = ''
     if (RGheader) {
       let headerText = RGheader[1];
@@ -88,10 +88,42 @@ class WOSScript {
       head = header.join('\n');
     }
 
-    let RGbody = filestr.replace((RGheader || [''])[0], '').trim()
-    let body = RGbody.replaceAll(';;', ',')
+    // The Footer
+    // ^/* <...> @WOS */$
+    let RGfooter = /\/\*\s*@WOS[ \n]*([^*]+)[ \n]*\*\/$/gi.exec(filestr);
+    let foot = ''
+    if (RGfooter) {
+      let footerText = RGfooter[1];
+      let footer = footerText.split('\n');
+      foot = footer.join('\n');
+    }
 
 
+    let RGbody = filestr
+      .replace((RGheader || [''])[0], '')
+      .replace((RGfooter || [''])[0], '').trim()
+
+    let labelToKey = (string: string, name: string) => {
+      let res = string.replaceAll(`${name}:`, `${name}`)
+
+      let innerKey = (nname: string) => {
+        return labelToKey(res, nname)
+      }
+
+      res = Object.assign(res, {
+        labelToKey: innerKey
+      })
+
+      return res as string & { labelToKey: typeof innerKey }
+    }
+
+    let body = RGbody
+      .replaceAll(';;', ',')
+
+    body = labelToKey(body, 'static')
+      .labelToKey('public')
+      .labelToKey('private')
+    
     // ---
 
     let $th = this
@@ -106,14 +138,15 @@ class WOSScript {
             return doc + `\nwindow.$wosglobe = $wosglobe;`
             break;
           case 'neut':
-            return doc + `\n;(\n  (\n    (globalThis?.window) && (window.$wosglobe = $wosglobe)\n  )\n    ||\n  (\n    (globalThis?.__dirname) && (globalThis.$wosglobe = $wosglobe)\n  )\n);`
+            return doc + `\n;(\n  (\n    (globalThis?.window) && (Object.assign(window.$wosglobe || (window.$wosglobe = {}), $wosglobe))\n  )\n    ` +
+              `||\n  (\n    (globalThis?.__dirname) && (Object.assign(globalThis.$wosglobe || (globalThis.$wosglobe = {}), $wosglobe))\n  )\n);`
             break;
         }
       }
-      
+
       return doc
     }
-    
+
     function objectCase(): string {
       let doc = ''
 
@@ -125,9 +158,11 @@ class WOSScript {
           '  PLEASE REFER TO DOCUMENTATION WHEN VIEWING COMPILED WOSSCRIPTS',
           `*/`,
           ``,
-          `const $wosglobe = {`, body.split('\n').map(a => '  ' + a).join('\n'), `}`,
+          `var $wosglobe = {`, body.split('\n').map(a => '  ' + a).join('\n'), `}`,
           ``,
         ].join('\n')
+        + (foot ? `\n` : '')
+        + foot
 
       doc = exporterSnip(doc)
 
@@ -147,9 +182,11 @@ class WOSScript {
           '    - This document was built in Class Mode',
           `*/`,
           ``,
-          `const $wosglobe = class {`, body.split('\n').map(a => '  ' + a).join('\n'), `}`,
+          `var $wosglobe = class {`, body.split('\n').map(a => '  ' + a).join('\n'), `}`,
           ``,
         ].join('\n')
+        + (foot ? `\n` : '')
+        + foot
 
       doc = exporterSnip(doc)
 
@@ -169,12 +206,14 @@ class WOSScript {
           '    - This document was built in Async Mode',
           `*/`,
           ``,
-          `const $wosglobe = async function() {`, body.split('\n').map(a => '  ' + a).join('\n'), `}`,
+          `var $wosglobe = async function() {`, body.split('\n').map(a => '  ' + a).join('\n'), `}`,
           ``,
         ].join('\n')
+        + (foot ? `\n` : '')
+        + foot
 
       doc = exporterSnip(doc)
-      
+
       return doc
     }
 
@@ -191,12 +230,14 @@ class WOSScript {
           '    - This document was built in Sync Mode',
           `*/`,
           ``,
-          `const $wosglobe = function() {`, body.split('\n').map(a => '  ' + a).join('\n'), `}`,
+          `var $wosglobe = function() {`, body.split('\n').map(a => '  ' + a).join('\n'), `}`,
           ``,
         ].join('\n')
+        + (foot ? `\n` : '')
+        + foot
 
       doc = exporterSnip(doc)
-      
+
       return doc
     }
 
@@ -233,15 +274,15 @@ class WOSScript {
     } catch (e) {
       console.error(
         Gd.beautify(
-          'Failed to run WOSScript:', 
-          [...Gd.preset.cherryblossoms, ...Gd.preset.amethyst].sort(() => Math.random() - 0.5), 
+          'Failed to run WOSScript:',
+          [...Gd.preset.cherryblossoms, ...Gd.preset.amethyst].sort(() => Math.random() - 0.5),
           true
-        ), 
-        
-        '\n\n', 
-        e, 
-        '\n',  
-        parsedCode, 
+        ),
+
+        '\n\n',
+        e,
+        '\n',
+        parsedCode,
         '\n\n'
       )
       return e
@@ -251,8 +292,14 @@ class WOSScript {
   }
 }
 
-;(
-  (globalThis?.window) && (Object.assign(window, { WOSScript })) 
-    ||
-  (globalThis?.module) && (module.exports = { WOSScript })
+; (
+  (
+    (globalThis?.window) && (Object.assign(window, { WOSScript }))
+  )
+  ||
+  (
+    (module) && (module.exports = { WOSScript })
+  )
 );
+
+export default WOSScript;

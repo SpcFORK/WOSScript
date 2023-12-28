@@ -10,4 +10,11 @@ export default defineConfig({
   bundle: true,
   dts: true,
   format: ['cjs', 'esm', 'iife'],
+  // "Use default"
+  banner: {
+    js: `"use strict"\n;!globalThis?.module && (Object.assign(globalThis, { module: { exports: {} } }));`,
+  },
+  // footer: {
+  //   js: `;(window?.module && );`,
+  // }
 })
