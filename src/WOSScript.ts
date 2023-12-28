@@ -138,8 +138,8 @@ class WOSScript {
             return doc + `\nwindow.$wosglobe = $wosglobe;`
             break;
           case 'neut':
-            return doc + `\n;(\n  (\n    (globalThis?.window) && (Object.assign(window.$wosglobe || (window.$wosglobe = {}), $wosglobe))\n  )\n    ` +
-              `||\n  (\n    (globalThis?.__dirname) && (Object.assign(globalThis.$wosglobe || (globalThis.$wosglobe = {}), $wosglobe))\n  )\n);`
+            return doc + `\n;(\n  (\n    (globalThis?.window) && (Object.assign(window[$wosModuleName] || (window[$wosModuleName] = {}), { [$wosModuleName]: $wosglobe }))\n  )\n    ` +
+              `||\n  (\n    (globalThis?.__dirname) && (Object.assign(globalThis[$wosModuleName] || (globalThis[$wosModuleName] = {}), { [$wosModuleName]: $wosglobe }))\n  )\n);`
             break;
         }
       }
@@ -158,7 +158,9 @@ class WOSScript {
           '  PLEASE REFER TO DOCUMENTATION WHEN VIEWING COMPILED WOSSCRIPTS',
           `*/`,
           ``,
-          `var $wosglobe = {`, body.split('\n').map(a => '  ' + a).join('\n'), `}`,
+          `var`,
+          `  $wosModuleName = '$wosglobe',`,
+          `  $wosglobe = {`, body.split('\n').map(a => '    ' + a).join('\n'), `  }`,
           ``,
         ].join('\n')
         + (foot ? `\n` : '')
@@ -178,11 +180,12 @@ class WOSScript {
           `/*@!!`,
           `  THIS IS A WOSSCRIPT`,
           '  PLEASE REFER TO DOCUMENTATION WHEN VIEWING COMPILED WOSSCRIPTS',
-          ``,
           '    - This document was built in Class Mode',
           `*/`,
           ``,
-          `var $wosglobe = class {`, body.split('\n').map(a => '  ' + a).join('\n'), `}`,
+          `var`,
+          `  $wosModuleName = '$wosglobe',`,
+          `  $wosglobe = class {`, body.split('\n').map(a => '    ' + a).join('\n'), `  }`,
           ``,
         ].join('\n')
         + (foot ? `\n` : '')
@@ -202,11 +205,12 @@ class WOSScript {
           `/*@!!`,
           `  THIS IS A WOSSCRIPT`,
           '  PLEASE REFER TO DOCUMENTATION WHEN VIEWING COMPILED WOSSCRIPTS',
-          ``,
           '    - This document was built in Async Mode',
           `*/`,
           ``,
-          `var $wosglobe = async function() {`, body.split('\n').map(a => '  ' + a).join('\n'), `}`,
+          `var`,
+          `  $wosModuleName = '$wosglobe',`,
+          `  $wosglobe = async function() {`, body.split('\n').map(a => '    ' + a).join('\n'), `  }`,
           ``,
         ].join('\n')
         + (foot ? `\n` : '')
@@ -226,11 +230,12 @@ class WOSScript {
           `/*@!!`,
           `  THIS IS A WOSSCRIPT`,
           '  PLEASE REFER TO DOCUMENTATION WHEN VIEWING COMPILED WOSSCRIPTS',
-          ``,
           '    - This document was built in Sync Mode',
           `*/`,
           ``,
-          `var $wosglobe = function() {`, body.split('\n').map(a => '  ' + a).join('\n'), `}`,
+          `var`,
+          `  $wosModuleName = '$wosglobe',`,
+          `  $wosglobe = function() {`, body.split('\n').map(a => '    ' + a).join('\n'), `  }`,
           ``,
         ].join('\n')
         + (foot ? `\n` : '')

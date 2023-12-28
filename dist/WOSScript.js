@@ -256,11 +256,11 @@ window.$wosglobe = $wosglobe;`;
             return doc + `
 ;(
   (
-    (globalThis?.window) && (Object.assign(window.$wosglobe || (window.$wosglobe = {}), $wosglobe))
+    (globalThis?.window) && (Object.assign(window[$wosModuleName] || (window[$wosModuleName] = {}), { [$wosModuleName]: $wosglobe }))
   )
     ||
   (
-    (globalThis?.__dirname) && (Object.assign(globalThis.$wosglobe || (globalThis.$wosglobe = {}), $wosglobe))
+    (globalThis?.__dirname) && (Object.assign(globalThis[$wosModuleName] || (globalThis[$wosModuleName] = {}), { [$wosModuleName]: $wosglobe }))
   )
 );`;
             break;
@@ -277,9 +277,11 @@ window.$wosglobe = $wosglobe;`;
         "  PLEASE REFER TO DOCUMENTATION WHEN VIEWING COMPILED WOSSCRIPTS",
         `*/`,
         ``,
-        `var $wosglobe = {`,
-        body.split("\n").map((a) => "  " + a).join("\n"),
-        `}`,
+        `var`,
+        `  $wosModuleName = '$wosglobe',`,
+        `  $wosglobe = {`,
+        body.split("\n").map((a) => "    " + a).join("\n"),
+        `  }`,
         ``
       ].join("\n") + (foot ? `
 ` : "") + foot;
@@ -293,13 +295,14 @@ window.$wosglobe = $wosglobe;`;
         `/*@!!`,
         `  THIS IS A WOSSCRIPT`,
         "  PLEASE REFER TO DOCUMENTATION WHEN VIEWING COMPILED WOSSCRIPTS",
-        ``,
         "    - This document was built in Class Mode",
         `*/`,
         ``,
-        `var $wosglobe = class {`,
-        body.split("\n").map((a) => "  " + a).join("\n"),
-        `}`,
+        `var`,
+        `  $wosModuleName = '$wosglobe',`,
+        `  $wosglobe = class {`,
+        body.split("\n").map((a) => "    " + a).join("\n"),
+        `  }`,
         ``
       ].join("\n") + (foot ? `
 ` : "") + foot;
@@ -313,13 +316,14 @@ window.$wosglobe = $wosglobe;`;
         `/*@!!`,
         `  THIS IS A WOSSCRIPT`,
         "  PLEASE REFER TO DOCUMENTATION WHEN VIEWING COMPILED WOSSCRIPTS",
-        ``,
         "    - This document was built in Async Mode",
         `*/`,
         ``,
-        `var $wosglobe = async function() {`,
-        body.split("\n").map((a) => "  " + a).join("\n"),
-        `}`,
+        `var`,
+        `  $wosModuleName = '$wosglobe',`,
+        `  $wosglobe = async function() {`,
+        body.split("\n").map((a) => "    " + a).join("\n"),
+        `  }`,
         ``
       ].join("\n") + (foot ? `
 ` : "") + foot;
@@ -333,13 +337,14 @@ window.$wosglobe = $wosglobe;`;
         `/*@!!`,
         `  THIS IS A WOSSCRIPT`,
         "  PLEASE REFER TO DOCUMENTATION WHEN VIEWING COMPILED WOSSCRIPTS",
-        ``,
         "    - This document was built in Sync Mode",
         `*/`,
         ``,
-        `var $wosglobe = function() {`,
-        body.split("\n").map((a) => "  " + a).join("\n"),
-        `}`,
+        `var`,
+        `  $wosModuleName = '$wosglobe',`,
+        `  $wosglobe = function() {`,
+        body.split("\n").map((a) => "    " + a).join("\n"),
+        `  }`,
         ``
       ].join("\n") + (foot ? `
 ` : "") + foot;
